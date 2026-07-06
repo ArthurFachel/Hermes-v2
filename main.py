@@ -252,3 +252,10 @@ async def health():
         "sessoes_ativas": len(list_sessions()),
         "traces_count": len(list_traces())
     }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", "8000"))
+    print(f"Hermes-Geo v2 rodando em http://0.0.0.0:{port}")
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
