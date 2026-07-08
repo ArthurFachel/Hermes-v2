@@ -15,7 +15,7 @@ import uuid
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
@@ -28,6 +28,8 @@ from database import (
     session_exists,
 )
 from tracer import save_trace, list_traces, load_trace, _parse_tool_calls
+from auth import require_api_key, create_key, revoke_key, PREFIX_LEN
+from db_keys import init_db as init_keys_db, list_keys as list_api_keys
 
 # ── Config ──────────────────────────────────────────────────────────────────
 MAX_TURNS = int(os.environ.get("MAX_TURNS", "50"))
@@ -39,6 +41,10 @@ app = FastAPI(
     description="API simplificada para Hermes Agent. Toda requisição salva em JSON com histórico + trace com tool calls cronometradas.",
     version="2.0.0"
 )
+
+
+# Inicializa DB de chaves na carga do módulo
+init_keys_db()
 
 
 # ── Schemas ──────────────────────────────────────────────────────────────────
@@ -80,7 +86,7 @@ def _build_query(history: list, query: str) -> str:
 # ── Endpoints ───────────────────────────────────────────────────────────────
 
 @app.post("/chat", summary="Enviar mensagem para o Hermes")
-async def chat(body: ChatRequest):
+async def chat(body: ChatRequest, _: str = Depends(require_api_key)):
     """Envia uma mensagem para o Hermes CLI e retorna a resposta."""
     import time as time_module
     _start = time_module.time()
@@ -197,14 +203,14 @@ async def chat(body: ChatRequest):
 
 
 @app.get("/sessions", summary="Listar todas as sessões")
-async def list_all_sessions():
+async def list_all_sessions(_: str = Depends(require_api_key)):
     """Retorna todas as sessões com metadados."""
     sessions = list_sessions()
     return {"total": len(sessions), "sessions": sessions}
 
 
 @app.get("/sessions/{session_id}", summary="Obter histórico completo de uma sessão")
-async def get_session(session_id: str):
+async def get_session(session_id: str, _: str = Depends(require_api_key)):
     """Retorna o JSON completo de uma sessão, incluindo todo o histórico."""
     session = load_session(session_id)
     if not session:
@@ -213,7 +219,7 @@ async def get_session(session_id: str):
 
 
 @app.delete("/sessions/{session_id}", summary="Deletar uma sessão")
-async def delete_session_endpoint(session_id: str):
+async def delete_session_endpoint(session_id: str, _: str = Depends(require_api_key)):
     """Remove uma sessão e seu arquivo JSON."""
     if not session_exists(session_id):
         return JSONResponse({"error": "session_id nao encontrada"}, status_code=404)
@@ -222,14 +228,14 @@ async def delete_session_endpoint(session_id: str):
 
 
 @app.get("/traces", summary="Listar todos os traces")
-async def list_all_traces():
+async def list_all_traces(_: str = Depends(require_api_key)):
     """Retorna todos os traces com metadados."""
     traces = list_traces()
     return {"total": len(traces), "traces": traces}
 
 
 @app.get("/traces/{trace_id}", summary="Obter trace completo")
-async def get_trace(trace_id: str):
+async def get_trace(trace_id: str, _: str = Depends(require_api_key)):
     """Retorna o JSON completo de um trace."""
     trace = load_trace(trace_id)
     if not trace:
@@ -252,6 +258,43 @@ async def health():
         "sessoes_ativas": len(list_sessions()),
         "traces_count": len(list_traces())
     }
+
+
+# ── API Key management endpoints ────────────────────────────────────────────
+
+
+class CreateKeyRequest(BaseModel):
+    user_id: str = Field(..., min_length=1, description="Owner label, e.g. 'unisinos'")
+
+
+@app.post("/keys", summary="Criar nova API key")
+async def create_api_key(body: CreateKeyRequest, _: str = Depends(require_api_key)):
+    """Gera uma nova API key. A chave raw é mostrada apenas uma vez."""
+    raw_key = create_key(body.user_id)
+    return {
+        "user_id": body.user_id,
+        "prefix": raw_key[:PREFIX_LEN],
+        "key": raw_key,
+        "warning": "Store this key now — it will NOT be shown again."
+    }
+
+
+@app.get("/keys", summary="Listar todas as API keys")
+async def list_api_keys_endpoint(_: str = Depends(require_api_key)):
+    """Retorna todas as chaves (sem segredos)."""
+    return {"keys": list_api_keys()}
+
+
+@app.delete("/keys/{key_prefix}", summary="Revogar chave(s) por prefixo")
+async def revoke_api_key(key_prefix: str, _: str = Depends(require_api_key)):
+    """Revoga todas as chaves ativas com o prefixo informado."""
+    count = revoke_key(key_prefix)
+    if count:
+        return {"status": "revoked", "prefix": key_prefix, "count": count}
+    return JSONResponse(
+        {"error": f"No active keys found with prefix '{key_prefix}'"},
+        status_code=404,
+    )
 
 
 if __name__ == "__main__":

@@ -1,0 +1,40 @@
+{
+  "keys": [
+    {
+      "id": 1,
+      "user_id": "fachel",
+      "key_hash": "47b5674338ca46431ffb9d09eee1439ad1de7ba3c10978bcb5e22e7012cb1fc0",
+      "key_prefix": "malta_-F",
+      "created_at": "2026-07-08T14:27:49.926911+00:00",
+      "last_used_at": "2026-07-08T14:34:09.572154+00:00",
+      "active": true
+    },
+    {
+      "id": 2,
+      "user_id": "unisinos",
+      "key_hash": "0153521a080f5ee0d6909555b6260457a4a52dccbc0e65d173899e7cec099640",
+      "key_prefix": "malta_Wd",
+      "created_at": "2026-07-08T14:31:38.322338+00:00",
+      "last_used_at": null,
+      "active": false
+    },
+    {
+      "id": 3,
+      "user_id": "teste_api",
+      "key_hash": "1fae1a4dc47a9b1f02f7b1fddd5e8e05f79f64bf45e36095105a191686347b3e",
+      "key_prefix": "malta_Zq",
+      "created_at": "2026-07-08T14:33:59.619902+00:00",
+      "last_used_at": null,
+      "active": false
+    },
+    {
+      "id": 4,
+      "user_id": "verify_test",
+      "key_hash": "c0bfc395c044bc1ae5a7bd6a9ee870bef75755fe5332450181aab851f16b420c",
+      "key_prefix": "malta_Sg",
+      "created_at": "2026-07-08T14:38:19.694153+00:00",
+      "last_used_at": "2026-07-08T14:38:19.694617+00:00",
+      "active": false
+    }
+  ]
+}
