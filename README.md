@@ -214,7 +214,7 @@ Resposta:
 - Prefixo (8 chars) usado para identificar/revogar, nunca o hash completo
 - `threading.Lock` protege escrita concorrente no arquivo JSON
 - Escrita atomica via `os.replace` (arquivo temporario -> destino)
-
+- Removendo trace toolcalling do telegram `hermes config set display.platforms.telegram.tool_progress off`
 ## Variaveis de ambiente
 
 | Variavel | Default | Descricao |
