@@ -19,7 +19,7 @@ from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from database import (
+from db.database import (
     create_session,
     load_session,
     append_message,
@@ -28,8 +28,8 @@ from database import (
     session_exists,
 )
 from tracer import save_trace, list_traces, load_trace, _parse_tool_calls
-from auth import require_api_key, create_key, revoke_key, PREFIX_LEN
-from db_keys import init_db as init_keys_db, list_keys as list_api_keys
+from db.auth import require_api_key, create_key, revoke_key, PREFIX_LEN
+from db.db_keys import init_db as init_keys_db, list_keys as list_api_keys
 
 # ── Config ──────────────────────────────────────────────────────────────────
 MAX_TURNS = int(os.environ.get("MAX_TURNS", "50"))

@@ -24,8 +24,8 @@ Examples
 import argparse
 import sys
 
-import db_keys as db
-import auth
+import db.db_keys as db
+import db.auth as auth
 
 db.init_db()
 

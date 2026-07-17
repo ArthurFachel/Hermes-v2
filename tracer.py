@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-TRACES_DIR = Path(__file__).parent / "traces"
+TRACES_DIR = Path(__file__).parent / "tool_traces"
 
 
 def _ensure_dir():

@@ -24,7 +24,7 @@ from functools import wraps
 from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
 
-import db_keys as db
+import db.db_keys as db
 
 
 PREFIX_LEN = 8
