@@ -99,6 +99,6 @@ hermes config show | sed -n '/◆ Model/,/^$/p' || true
 echo ""
 echo "Próximos passos:"
 echo "  cd $INSTALL_DIR && source venv/bin/activate"
-echo "  python manage_keys.py create <user_id>   # criar chave malta_..."
-echo "  python main.py                           # sobe a API na porta 8000"
+echo "  python db/manage_keys.py create <user_id>   # criar chave malta_..."
+echo "  python main.py                             # sobe a API na porta 8000"
 echo "  hermes -z \"teste\"                        # testar o agente direto"
