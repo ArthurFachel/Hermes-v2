@@ -84,10 +84,10 @@ python db/manage_keys.py revoke <key_prefix>
 Exemplos:
 
 ```bash
-python db/manage_keys.py create unisinos
-python db/manage_keys.py create malta_internal
-python db/manage_keys.py list
-python db/manage_keys.py revoke malta_Xk
+python -m db/manage_keys.py create unisinos
+python -m db/manage_keys.py create malta_internal
+python -m db/manage_keys.py list
+python -m db/manage_keys.py revoke malta_Xk
 ```
 
 ### Gerenciamento via API
