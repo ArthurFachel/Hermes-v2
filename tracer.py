@@ -13,6 +13,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
+from security import sanitize_data
+
 TRACES_DIR = Path(__file__).parent / "tool_traces"
 
 
@@ -98,7 +100,7 @@ def save_trace(
     """Salva um trace completo de uma requisição."""
     _ensure_dir()
     path = _trace_path(trace_id)
-    trace = {
+    trace = sanitize_data({
         "trace_id": trace_id,
         "session_id": session_id,
         "timestamp": _now_iso(),
@@ -112,7 +114,7 @@ def save_trace(
         },
         "tool_calls": tool_calls,
         "error": error,
-    }
+    })
     with open(path, "w", encoding="utf-8") as f:
         json.dump(trace, f, ensure_ascii=False, indent=2)
     return trace
@@ -132,7 +134,8 @@ def list_traces() -> list:
                 "tool_calls_count": len(t.get("tool_calls", [])),
                 "error": t.get("error"),
             })
-    return traces
+    # Sanitiza metadados de traces antigos antes de listá-los.
+    return sanitize_data(traces)
 
 
 def load_trace(trace_id: str) -> dict | None:
@@ -140,4 +143,5 @@ def load_trace(trace_id: str) -> dict | None:
     if not path.exists():
         return None
     with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+        # Defesa adicional para traces antigos, criados antes da sanitização.
+        return sanitize_data(json.load(f))

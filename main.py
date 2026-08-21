@@ -30,6 +30,7 @@ from db.database import (
 from tracer import save_trace, list_traces, load_trace, _parse_tool_calls
 from db.auth import require_api_key, create_key, revoke_key, PREFIX_LEN
 from db.db_keys import init_db as init_keys_db, list_keys as list_api_keys
+from security import sanitize_data, sanitize_text
 
 # ── Config ──────────────────────────────────────────────────────────────────
 MAX_TURNS = int(os.environ.get("MAX_TURNS", "50"))
@@ -74,7 +75,10 @@ def _clean_stdout(raw: str) -> str:
 def _build_query(history: list, query: str) -> str:
     if not history:
         return query
-    historico_json = json.dumps(history, ensure_ascii=False, indent=2)
+    # Não reinjeta em novos turnos dados sensíveis salvos por versões antigas.
+    historico_json = json.dumps(
+        sanitize_data(history), ensure_ascii=False, indent=2
+    )
     instruction = (
         "INSTRUCAO DE SISTEMA: a pergunta a seguir faz parte de uma sessao ja em "
         "andamento. Responda usando as informacoes contidas no "
@@ -104,7 +108,8 @@ async def chat(body: ChatRequest, _: str = Depends(require_api_key)):
     history = session["history"] if session else []
 
     query_to_send = _build_query(history, body.query)
-    append_message(session_id, "user", body.query)
+    # A consulta original segue para o Hermes, mas o histórico persistido é seguro.
+    append_message(session_id, "user", sanitize_text(body.query))
 
     error = None
     hermes_stdout = ""
@@ -125,11 +130,13 @@ async def chat(body: ChatRequest, _: str = Depends(require_api_key)):
         hermes_returncode = result.returncode
 
         if result.returncode != 0:
-            stderr = result.stderr.strip() or "(sem saida de erro)"
+            stderr = sanitize_text(
+                result.stderr.strip() or "(sem saida de erro)"
+            )
             resposta = f"Erro no hermes (rc={result.returncode}): {stderr}"
             error = resposta
         else:
-            resposta = _clean_stdout(result.stdout)
+            resposta = sanitize_text(_clean_stdout(result.stdout))
     except FileNotFoundError:
         resposta = "Erro: comando 'hermes' nao encontrado no PATH."
         error = "hermes_not_found"
@@ -215,7 +222,8 @@ async def get_session(session_id: str, _: str = Depends(require_api_key)):
     session = load_session(session_id)
     if not session:
         return JSONResponse({"error": "session_id nao encontrada"}, status_code=404)
-    return session
+    # Sanitiza também sessões legadas, que podem conter respostas sem filtro.
+    return sanitize_data(session)
 
 
 @app.delete("/sessions/{session_id}", summary="Deletar uma sessão")
@@ -282,7 +290,7 @@ async def create_api_key(body: CreateKeyRequest, _: str = Depends(require_api_ke
 @app.get("/keys", summary="Listar todas as API keys")
 async def list_api_keys_endpoint(_: str = Depends(require_api_key)):
     """Retorna todas as chaves (sem segredos)."""
-    return {"keys": list_api_keys()}
+    return sanitize_data({"keys": list_api_keys()})
 
 
 @app.delete("/keys/{key_prefix}", summary="Revogar chave(s) por prefixo")

@@ -10,11 +10,13 @@ Toda requisição é salva em arquivo JSON com histórico completo da sessão. C
 Hermes-v2/
 ├── main.py                          # Aplicação FastAPI — endpoints e lógica de chat
 ├── tracer.py                        # Engine de tracing (salva em tool_traces/)
+├── security.py                      # Filtro de saída para dados operacionais sensíveis
 ├── SOUL.md                          # Personalidade do agente — Gonzaguinha (Geociências)
 ├── requirements.txt                 # Dependências Python
 ├── install_hermes_lightsail.sh      # Script de deploy para AWS Lightsail
 ├── benchmark_questions/             # Benchmark do agente (CSV)
-│   └── benchmark_chatbot_geologia.csv
+│   ├── benchmark_chatbot_geologia.csv
+│   └── benchmark_seguranca_llm.csv   # 20 testes de paths, secrets e prompt injection
 ├── fontes_de_conhecimento/          # Base de conhecimento interna sobre Geociências
 │   ├── artigos/                     # Artigos científicos em PDF e Markdown
 │   └── bacias/                      # Descrições de bacias sedimentares
@@ -187,6 +189,8 @@ Resposta:
 
 - Chaves armazenadas como hash SHA-256 (nunca em texto plano)
 - Chave raw mostrada uma única vez na criação
+- Respostas, históricos e traces sanitizados antes de serem expostos ou persistidos
+- Redação de paths, tokens, hashes, variáveis de ambiente, IPs e dados SSH
 - Comparação em tempo constante via `hmac.compare_digest`
 - Prefixo (8 chars) usado para identificar/revogar, nunca o hash completo
 - `threading.Lock` protege escrita concorrente no arquivo JSON
@@ -215,7 +219,7 @@ Resposta:
 
 ## Base de conhecimento e benchmark
 
-O repositório inclui uma base de conhecimento interna em `fontes_de_conhecimento/` com artigos científicos e descrições de bacias sedimentares, usada pelo agente Gonzaguinha para responder perguntas de Geociências. A pasta `benchmark_questions/` contém um benchmark com perguntas parametrizadas e de recuperação (RAG) para avaliar o desempenho do agente.
+O repositório inclui uma base de conhecimento interna em `fontes_de_conhecimento/` com artigos científicos e descrições de bacias sedimentares, usada pelo agente Gonzaguinha para responder perguntas de Geociências. A pasta `benchmark_questions/` contém o benchmark de desempenho geológico e um mini benchmark de segurança com 20 casos para avaliar vazamento de caminhos, segredos, instruções internas e dados entre sessões. Consulte `benchmark_questions/README_seguranca.md` para execução e pontuação.
 
 ## Licença
 
