@@ -25,13 +25,13 @@ INSTALL_DIR="$HOME/Hermes-v2"
 BEDROCK_MODEL="deepseek.v3.2"   # ID do DeepSeek V3.2 no AWS Bedrock
 
 echo "=========================================="
-echo " [1/8] sudo apt update + dependências"
+echo " [1/11] sudo apt update + dependências"
 echo "=========================================="
 sudo apt update
 sudo apt install -y python3 python3-venv python3-pip git
 
 echo "=========================================="
-echo " [2/8] Clonando o repositório"
+echo " [2/11] Clonando o repositório"
 echo "=========================================="
 if [ -d "$INSTALL_DIR/.git" ]; then
     echo "Repo já existe em $INSTALL_DIR — atualizando (git pull)..."
@@ -42,14 +42,14 @@ fi
 cd "$INSTALL_DIR"
 
 echo "=========================================="
-echo " [3/8] Criando e ativando o venv"
+echo " [3/11] Criando e ativando o venv"
 echo "=========================================="
 python3 -m venv venv
 # shellcheck disable=SC1091
 source venv/bin/activate
 
 echo "=========================================="
-echo " [4/8] Instalando requirements.txt"
+echo " [4/11] Instalando requirements.txt"
 echo "=========================================="
 pip install --upgrade pip
 pip install -r requirements.txt
@@ -58,7 +58,7 @@ pip install -r requirements.txt
 pip install boto3
 
 echo "=========================================="
-echo " [5/8] Configurando AWS CLI (aws configure)"
+echo " [5/11] Configurando AWS CLI (aws configure)"
 echo "=========================================="
 if [[ "$AWS_ACCESS_KEY_ID" == *"AQUI"* || "$AWS_SECRET_ACCESS_KEY" == *"AQUI"* ]]; then
     echo "⚠  Você não editou o template de credenciais no topo do script."
@@ -76,7 +76,7 @@ echo "-- Verificando credenciais (sts get-caller-identity)..."
 aws sts get-caller-identity || echo "⚠  Não foi possível validar as credenciais — confira as chaves."
 
 echo "=========================================="
-echo " [6/8] Hermes Agent → DeepSeek V3.2 via AWS Bedrock"
+echo " [6/11] Hermes Agent → DeepSeek V3.2 via AWS Bedrock"
 echo "=========================================="
 # Esses comandos também criam o ~/.hermes na primeira execução
 hermes config set model.provider bedrock
@@ -84,7 +84,7 @@ hermes config set model.default "$BEDROCK_MODEL"
 hermes config set bedrock.region "$AWS_REGION"
 
 echo "=========================================="
-echo " [7/8] Substituindo o SOUL.md do Hermes"
+echo " [7/11] Substituindo o SOUL.md do Hermes"
 echo "=========================================="
 HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
 mkdir -p "$HERMES_HOME"
@@ -92,7 +92,7 @@ cp -f "$INSTALL_DIR/SOUL.md" "$HERMES_HOME/SOUL.md"
 echo "SOUL.md do repositório copiado para $HERMES_HOME/SOUL.md"
 
 echo "=========================================="
-echo " [8/8] Personalizando a mensagem de pairing do gateway"
+echo " [8/11] Personalizando a mensagem de pairing do gateway"
 echo "=========================================="
 # Reescreve o texto fixo enviado a usuários não reconhecidos (DM pairing),
 # embutido em gateway/run.py. Idempotente e version-robusto: localiza a string
@@ -151,7 +151,7 @@ print(f"✅ Mensagem de pairing personalizada em {path}")
 PY
 
 echo "=========================================="
-echo " [9/9] Restringindo o menu de comandos do Telegram (/help e /new)"
+echo " [9/11] Restringindo o menu de comandos do Telegram (/help e /new)"
 echo "=========================================="
 # Por padrão o Hermes registra ~50 comandos internos + as skills instaladas no
 # menu de botões do Telegram (setMyCommands). Aqui restringimos o menu a apenas
@@ -221,6 +221,37 @@ except SyntaxError as e:
 path.write_text(new_src, encoding="utf-8")
 print(f"✅ Menu do Telegram restrito a /help e /new em {path}")
 PY
+
+echo "=========================================="
+echo " [10/11] Instalando a skill de transcrição de áudio"
+echo "=========================================="
+# Copia a skill "audio-transcription-telegram" versionada no repositório para o
+# diretório de skills do HERMES_HOME do destino (~/.hermes/skills/). É isso que
+# ensina o agente a configurar/depurar a transcrição automática de áudio que o
+# passo [11/11] liga. Idempotente: sobrescreve com a versão do repo a cada run.
+SKILL_SRC="$INSTALL_DIR/skills/hermes/audio-transcription-telegram"
+SKILL_DST="$HERMES_HOME/skills/hermes/audio-transcription-telegram"
+if [ -f "$SKILL_SRC/SKILL.md" ]; then
+    mkdir -p "$SKILL_DST"
+    cp -f "$SKILL_SRC/SKILL.md" "$SKILL_DST/SKILL.md"
+    echo "✅ Skill copiada para $SKILL_DST/SKILL.md"
+else
+    echo "⚠  Skill não encontrada em $SKILL_SRC — pulando (o repo pode estar desatualizado)."
+fi
+
+echo "=========================================="
+echo " [11/11] Ativando a transcrição automática de áudio (STT)"
+echo "=========================================="
+# Liga a transcrição de mensagens de voz no gateway e fixa o provider "local"
+# (faster-whisper, sem API key). Instala o faster-whisper no venv já ativo para
+# que a transcrição funcione de imediato, sem depender do lazy-install. O
+# download do modelo Whisper (~150MB, "base") acontece no primeiro uso.
+hermes config set stt.enabled true
+hermes config set stt.provider local
+hermes config set stt.local.model base
+hermes config set stt.echo_transcripts true
+echo "-- Instalando faster-whisper (transcrição local, sem API key)..."
+pip install "faster-whisper==1.2.1" || echo "⚠  Falha ao instalar faster-whisper — a transcrição fará lazy-install no primeiro uso."
 
 echo ""
 echo "=========================================="
