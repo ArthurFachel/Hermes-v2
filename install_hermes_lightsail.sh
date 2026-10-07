@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # ============================================================
-#  Instalador Hermes-v2 (Hermes-Geo) — AWS Lightsail / Ubuntu
-#  Autor: Arthur Fachel — MALTA-LAB / PUCRS
+#  Instalador Lightsail-Petrobras (Hermes-Geo) — AWS Lightsail / Ubuntu
+#  Autor -| Arthur Fachel - MALTA-LAB / PUCRS
+#         | Otávio Parraga - MALTA-LAB / PUCRS
 #
 #  Uso:
 #    1. Edite as variáveis AWS_* abaixo (template)
@@ -20,8 +21,8 @@ AWS_REGION="us-east-1"   # DeepSeek no Bedrock: us-east-1 / us-west-2
 # ============================================================
 # CONFIGURAÇÕES GERAIS
 # ============================================================
-REPO_URL="https://github.com/ArthurFachel/Hermes-v2.git"
-INSTALL_DIR="$HOME/Hermes-v2"
+REPO_URL="https://github.com/ArthurFachel/Lightsail-Petrobras"
+INSTALL_DIR="$HOME/Lightsail-Petrobras"
 BEDROCK_MODEL="deepseek.v3.2"   # ID do DeepSeek V3.2 no AWS Bedrock
 
 echo "=========================================="
