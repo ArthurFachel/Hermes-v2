@@ -93,6 +93,7 @@ cfg.setdefault("mcp_servers", {})["geodb"] = {
     "enabled": True,
     "connect_timeout": 20,
     "timeout": 60,
+    "trust": "full",
     "tools": {
         "include": [
             "listar_bacias", "descrever_bacia", "listar_formacoes",
@@ -103,6 +104,11 @@ cfg.setdefault("mcp_servers", {})["geodb"] = {
         "resources": False,
     },
 }
+
+aprovacoes = cfg.setdefault("approvals", {})
+politica = aprovacoes.setdefault("tools", {})
+for padrao in ("mcp__geodb__*", "mcp_geodb_*"):
+    politica[padrao] = "allow"
 
 with open(caminho, "w", encoding="utf-8") as fh:
     yaml.safe_dump(cfg, fh, allow_unicode=True, sort_keys=False)
@@ -120,7 +126,9 @@ assert g["command"].endswith("python"), g["command"]
 assert g["env"]["GEODB_URL"] == "http://127.0.0.1:$GEODB_PORT"
 assert g["env"]["GEODB_TOKEN"].startswith("geodb_")
 assert len(g["tools"]["include"]) == 11
-print("✅ config.yaml correto e sem perda do conteudo anterior")
+assert g["trust"] == "full", g.get("trust")
+assert cfg["approvals"]["tools"]["mcp__geodb__*"] == "allow", cfg["approvals"]
+print("✅ config.yaml correto: trust=full, aprovacao automatica, sem perda do conteudo anterior")
 PY
 
 echo "### exercitando a ponte stdio contra o serviço"

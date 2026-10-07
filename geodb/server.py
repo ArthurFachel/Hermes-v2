@@ -31,6 +31,11 @@ from typing import Annotated, Any
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.responses import JSONResponse
 from mcp.server.mcpserver import MCPServer
+from mcp.types import ToolAnnotations
+
+# Todas as ferramentas desta base sao de leitura. A anotacao evita que clientes
+# MCP peçam aprovacao do usuario a cada consulta e permite retry transparente.
+LEITURA = ToolAnnotations(read_only_hint=True, destructive_hint=False, idempotent_hint=True)
 from mcp.server.transport_security import TransportSecuritySettings
 
 import consultas as gdb
@@ -108,12 +113,12 @@ mcp = MCPServer(
 )
 
 
-@mcp.tool(description="Lista as bacias sedimentares disponiveis na base.")
+@mcp.tool(annotations=LEITURA, description="Lista as bacias sedimentares disponiveis na base.")
 def listar_bacias() -> list[dict[str, Any]]:
     return gdb.listar_bacias()
 
 
-@mcp.tool(description=(
+@mcp.tool(annotations=LEITURA, description=(
     "Ficha completa de uma bacia: area, orientacao, contexto tectonico, "
     "sequencias estratigraficas e grupos. Use para perguntas gerais sobre a bacia."))
 def descrever_bacia(nome: str) -> dict[str, Any]:
@@ -121,14 +126,14 @@ def descrever_bacia(nome: str) -> dict[str, Any]:
     return r or {"encontrado": False, "mensagem": f"Nenhuma bacia chamada '{nome}' na base."}
 
 
-@mcp.tool(description=(
+@mcp.tool(annotations=LEITURA, description=(
     "Lista as formacoes de uma bacia em ordem estratigrafica, da base para o topo. "
     "Filtre por grupo (ex.: 'Santana') ou por sequencia (ex.: 'Pos-Rifte I')."))
 def listar_formacoes(grupo: str | None = None, sequencia: str | None = None) -> list[dict[str, Any]]:
     return gdb.listar_formacoes(grupo=grupo, sequencia=sequencia)
 
 
-@mcp.tool(description=(
+@mcp.tool(annotations=LEITURA, description=(
     "Ficha completa de uma formacao geologica: idade, litologia, espessura, "
     "ambiente deposicional, geoquimica e conteudo fossilifero. Aceita o nome com "
     "ou sem o prefixo 'Formacao'."))
@@ -137,7 +142,7 @@ def descrever_formacao(nome: str) -> dict[str, Any]:
     return r or {"encontrado": False, "mensagem": f"Nenhuma formacao chamada '{nome}' na base."}
 
 
-@mcp.tool(description=(
+@mcp.tool(annotations=LEITURA, description=(
     "Dados de geoquimica organica de uma formacao: faixa de COT, tipo de "
     "querogenio, maturidade termica e metodo analitico. Use sempre que a pergunta "
     "envolver COT, querogenio, rocha geradora ou potencial de geracao."))
@@ -145,25 +150,25 @@ def geoquimica_formacao(nome: str) -> list[dict[str, Any]]:
     return gdb.geoquimica_formacao(nome)
 
 
-@mcp.tool(description="Conteudo fossilifero registrado para uma formacao.")
+@mcp.tool(annotations=LEITURA, description="Conteudo fossilifero registrado para uma formacao.")
 def fosseis_formacao(nome: str) -> list[dict[str, Any]]:
     return gdb.fosseis_formacao(nome)
 
 
-@mcp.tool(description=(
+@mcp.tool(annotations=LEITURA, description=(
     "Em quais formacoes ocorre um grupo fossil (ex.: 'pterossauros', 'ostracodes')."))
 def buscar_fossil(grupo_biologico: str) -> list[dict[str, Any]]:
     return gdb.buscar_fossil(grupo_biologico)
 
 
-@mcp.tool(description=(
+@mcp.tool(annotations=LEITURA, description=(
     "Dados de um poco exploratorio: sub-bacia e profundidade do embasamento."))
 def buscar_poco(nome: str) -> dict[str, Any]:
     r = gdb.buscar_poco(nome)
     return r or {"encontrado": False, "mensagem": f"Nenhum poco '{nome}' na base."}
 
 
-@mcp.tool(description=(
+@mcp.tool(annotations=LEITURA, description=(
     "Divergencias conhecidas da literatura sobre um tema (ex.: 'ingressao marinha', "
     "'sequencias estratigraficas'). Devolve SEMPRE as duas posicoes com suas fontes. "
     "Chame esta ferramenta antes de afirmar algo como consenso."))
@@ -171,14 +176,14 @@ def controversias(tema: str | None = None) -> list[dict[str, Any]]:
     return gdb.controversias(tema)
 
 
-@mcp.tool(description=(
+@mcp.tool(annotations=LEITURA, description=(
     "Identidade da base: versao da carga, data de geracao e numero de registros por "
     "tabela. Use quando perguntarem qual versao da base esta ativa ou o que ela cobre."))
 def versao_base() -> dict[str, Any]:
     return gdb.estatisticas()
 
 
-@mcp.tool(description=(
+@mcp.tool(annotations=LEITURA, description=(
     "Busca textual livre nas descricoes das formacoes quando voce nao sabe o nome "
     "exato. Ex.: 'evaporitos gipsita', 'calcario laminado'."))
 def busca_livre(termo: str, limite: int = 10) -> list[dict[str, Any]]:

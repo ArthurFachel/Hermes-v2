@@ -444,6 +444,9 @@ cfg.setdefault("mcp_servers", {})["geodb"] = {
     "enabled": True,
     "connect_timeout": 20,
     "timeout": 60,
+    # Servico proprio e somente leitura: sem gate de aprovacao por chamada.
+    # (trust: untrusted faria o Hermes pedir aprovacao a cada tool call.)
+    "trust": "full",
     # Somente leitura: nenhuma destas ferramentas escreve na base.
     "tools": {
         "include": [
@@ -455,6 +458,17 @@ cfg.setdefault("mcp_servers", {})["geodb"] = {
         "resources": False,
     },
 }
+
+# Politica por ferramenta: consulta a base nunca pede autorizacao ao usuario.
+# Sem isto, dependendo da versao do Hermes, cada consulta vira um prompt no
+# Telegram — inviabilizando o uso.
+aprovacoes = cfg.setdefault("approvals", {})
+politica = aprovacoes.setdefault("tools", {})
+if not isinstance(politica, dict):
+    politica = {}
+    aprovacoes["tools"] = politica
+for padrao in ("mcp__geodb__*", "mcp_geodb_*"):
+    politica[padrao] = "allow"
 
 with open(caminho, "w", encoding="utf-8") as fh:
     yaml.safe_dump(cfg, fh, allow_unicode=True, sort_keys=False)
