@@ -19,6 +19,11 @@ from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent
 
+# Identificador da carga. Mude a cada alteracao relevante nos dados.
+# Serve de canario para verificar se o agente consultou mesmo a base: a string
+# nao aparece em nenhum documento e o modelo nao tem como adivinhar.
+VERSAO_BASE = "araripe-2026.10-r1"
+
 REFERENCIAS = [
     ("fambrini2020", "Fambrini, G. L. et al.", 2020,
      "Estratigrafia da Bacia do Araripe: estado da arte, revisao critica e resultados novos",
@@ -297,6 +302,17 @@ def construir(db_path: Path) -> sqlite3.Connection:
         db_path.unlink()
     conn = sqlite3.connect(db_path)
     conn.executescript((AQUI / "schema.sql").read_text(encoding="utf-8"))
+
+    from datetime import datetime, timezone
+
+    conn.executemany(
+        "INSERT INTO metadados (chave, valor) VALUES (?,?)",
+        [
+            ("versao_base", VERSAO_BASE),
+            ("gerada_em", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")),
+            ("cobertura", "Bacia do Araripe"),
+        ],
+    )
 
     refs: dict[str, int] = {}
     for chave, autores, ano, titulo, veiculo in REFERENCIAS:

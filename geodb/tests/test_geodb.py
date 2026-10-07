@@ -122,6 +122,14 @@ def test_formacao_inexistente_nao_explode(base):
     assert gdb.descrever_formacao("Formação Inventada") is None
 
 
+def test_versao_base_e_canario(base):
+    """A versao so existe na base: serve para provar que o agente consultou."""
+    e = gdb.estatisticas()
+    assert e["versao_base"] == seed.VERSAO_BASE
+    assert e["cobertura"] == "Bacia do Araripe"
+    assert e["registros"]["formacoes"] == 10
+
+
 def test_busca_livre_encontra_evaporito(base):
     nomes = [r["nome"] for r in gdb.busca_livre("evaporitos gipsita")]
     assert "Ipubi" in nomes

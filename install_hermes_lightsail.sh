@@ -449,7 +449,7 @@ cfg.setdefault("mcp_servers", {})["geodb"] = {
         "include": [
             "listar_bacias", "descrever_bacia", "listar_formacoes",
             "descrever_formacao", "geoquimica_formacao", "fosseis_formacao",
-            "buscar_fossil", "buscar_poco", "controversias", "busca_livre",
+            "buscar_fossil", "buscar_poco", "controversias", "busca_livre", "versao_base",
         ],
         "prompts": False,
         "resources": False,

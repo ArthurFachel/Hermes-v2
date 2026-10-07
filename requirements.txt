@@ -1,5 +1,8 @@
 fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
 pydantic>=2.0
-hermes-agent
+# O extra [mcp] traz o SDK Model Context Protocol. Sem ele o Hermes recusa
+# qualquer servidor MCP com "requires the 'mcp' Python SDK", e a ferramenta da
+# GeoDB nunca aparece para o agente.
+hermes-agent[mcp]
 awscli

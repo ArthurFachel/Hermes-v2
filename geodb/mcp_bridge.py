@@ -119,6 +119,13 @@ def controversias(tema: str | None = None) -> Any:
 
 
 @mcp.tool(description=(
+    "Identidade da base: versao da carga, data de geracao e numero de registros por "
+    "tabela. Use quando perguntarem qual versao da base esta ativa ou o que ela cobre."))
+def versao_base() -> Any:
+    return _buscar("/v1/versao")
+
+
+@mcp.tool(description=(
     "Busca textual livre nas descricoes das formacoes quando voce nao sabe o nome exato. "
     "Ex.: 'evaporitos gipsita', 'calcario laminado'."))
 def busca_livre(termo: str, limite: int = 10) -> Any:

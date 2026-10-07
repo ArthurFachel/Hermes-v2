@@ -172,6 +172,13 @@ def controversias(tema: str | None = None) -> list[dict[str, Any]]:
 
 
 @mcp.tool(description=(
+    "Identidade da base: versao da carga, data de geracao e numero de registros por "
+    "tabela. Use quando perguntarem qual versao da base esta ativa ou o que ela cobre."))
+def versao_base() -> dict[str, Any]:
+    return gdb.estatisticas()
+
+
+@mcp.tool(description=(
     "Busca textual livre nas descricoes das formacoes quando voce nao sabe o nome "
     "exato. Ex.: 'evaporitos gipsita', 'calcario laminado'."))
 def busca_livre(termo: str, limite: int = 10) -> list[dict[str, Any]]:
@@ -268,6 +275,11 @@ def r_poco(nome: str) -> dict[str, Any]:
 @app.get(V1 + "/controversias", dependencies=protegido, summary="Divergencias na literatura")
 def r_controversias(tema: str | None = Query(None)) -> list[dict[str, Any]]:
     return gdb.controversias(tema)
+
+
+@app.get(V1 + "/versao", dependencies=protegido, summary="Identidade e tamanho da carga")
+def r_versao() -> dict[str, Any]:
+    return gdb.estatisticas()
 
 
 @app.get(V1 + "/busca", dependencies=protegido, summary="Busca textual nas formacoes")

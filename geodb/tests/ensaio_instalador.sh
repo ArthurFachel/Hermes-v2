@@ -97,7 +97,7 @@ cfg.setdefault("mcp_servers", {})["geodb"] = {
         "include": [
             "listar_bacias", "descrever_bacia", "listar_formacoes",
             "descrever_formacao", "geoquimica_formacao", "fosseis_formacao",
-            "buscar_fossil", "buscar_poco", "controversias", "busca_livre",
+            "buscar_fossil", "buscar_poco", "controversias", "busca_livre", "versao_base",
         ],
         "prompts": False,
         "resources": False,
@@ -119,7 +119,7 @@ assert cfg["model"]["provider"] == "bedrock", "config preexistente foi perdido"
 assert g["command"].endswith("python"), g["command"]
 assert g["env"]["GEODB_URL"] == "http://127.0.0.1:$GEODB_PORT"
 assert g["env"]["GEODB_TOKEN"].startswith("geodb_")
-assert len(g["tools"]["include"]) == 10
+assert len(g["tools"]["include"]) == 11
 print("✅ config.yaml correto e sem perda do conteudo anterior")
 PY
 
@@ -148,7 +148,7 @@ async def main():
         async with ClientSession(fluxos[0], fluxos[1]) as s:
             await s.initialize()
             t = await s.list_tools()
-            assert len(t.tools) == 10, len(t.tools)
+            assert len(t.tools) == 11, len(t.tools)
             print(f"✅ ponte expos {len(t.tools)} ferramentas")
             r = await s.call_tool("geoquimica_formacao", {"nome": "Formação Ipubi"})
             dado = json.loads("".join(c.text for c in r.content if hasattr(c, "text")))

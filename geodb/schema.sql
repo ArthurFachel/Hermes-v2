@@ -3,6 +3,13 @@
 
 PRAGMA foreign_keys = ON;
 
+-- Identidade da carga. Serve de canario: a versao nao existe em nenhum documento
+-- nem no conhecimento do modelo, entao so pode ser respondida consultando a base.
+CREATE TABLE metadados (
+    chave  TEXT PRIMARY KEY,
+    valor  TEXT NOT NULL
+);
+
 CREATE TABLE referencias (
     id        INTEGER PRIMARY KEY,
     chave     TEXT NOT NULL UNIQUE,   -- "assine2007"

@@ -234,8 +234,14 @@ def busca_livre(termo: str, limite: int = 10) -> list[dict[str, Any]]:
         return []
 
 
-def estatisticas() -> dict[str, int]:
+def estatisticas() -> dict[str, Any]:
+    """Identidade e tamanho da carga. Usada para verificar que a base foi consultada."""
     with conectar() as conn:
         tabelas = ["bacias", "sequencias", "grupos", "formacoes",
                    "geoquimica", "fosseis", "pocos", "controversias", "referencias"]
-        return {t: conn.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0] for t in tabelas}
+        registros = {t: conn.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0] for t in tabelas}
+        try:
+            meta = {r["chave"]: r["valor"] for r in conn.execute("SELECT chave, valor FROM metadados")}
+        except sqlite3.OperationalError:
+            meta = {}
+    return {**meta, "registros": registros}
